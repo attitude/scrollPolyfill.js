@@ -76,7 +76,7 @@ window.addEventListener('load', function() {
         e.preventDefault();
 
         // Sets value to where to scroll
-        scrollToValue = scrollToStart + ((startPageY - e.pageY) * scrollToPixelRatio);
+        scrollToValue = startPageY - e.pageY + document.body.scrollTop;
 
         // Set buffer of last distances for later to calculate momentum scroll
         distances[0] = distances[1];
