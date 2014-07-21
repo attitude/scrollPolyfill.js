@@ -49,7 +49,8 @@ window.addEventListener('load', function() {
                 return;
             }
 
-            momentumAcceleration-= momentumAcceleration * Math.pow(coefDelta, 10 * (ticksSince/momentumTicks - 1));
+            // Quadratic easing out
+            momentumAcceleration -= momentumAcceleration * Math.pow((ticksSince/momentumTicks), coefDelta);
 
             // Help with rounding; fixes juming feel
             if (momentumAcceleration < 0) {
