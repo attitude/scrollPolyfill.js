@@ -1,19 +1,43 @@
 /*! touchScroll.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
 window.addEventListener('load', function() {
-    var startPageY,
+    var // Scroll Top where touch starts
+        startPageY,
+
+        // Momentum animation interval value
         momentumInterval,
+        // Momentum acceleration
         momentumAcceleration,
 
-        scrollToStart = scrollToValue = momentumToValue = previousScrollToValue = document.body.scrollTop,
+        // Scroll top when move started
+        scrollToStart
+            // Scroll top where to go to
+            = scrollToValue
+            // Scroll top where momentum scroll to go to
+            = momentumToValue
+            // Scroll top where previous move went to
+            = previousScrollToValue
+            // Default is current position
+            = document.body.scrollTop,
+
+        // Artificial scroll event
         scrollToTriggered  = false,
+
+        // Scroll by touch move is active
         scrollToActive     = false,
 
-        // More means longer ease out, default: 2
-        coefDelta      = 6,
+        // More means slow-down comes later, default: 1
+        coefDelta      = 1,
+
+        // More means longer momentum scroll, default: 50
         momentumTicks  = 50,
 
+        // Redraw speed; default: 50 ~ 25fps
         ticksPerSecond = 50,
+
+        // Number of ticks since move event
         ticksSince     = 0,
+
+        // Last move duration
         ticksPerMove   = 0
         ;
 
@@ -22,6 +46,7 @@ window.addEventListener('load', function() {
         scrollToActive = true;
         startPageY     = e.pageY;
 
+        // Start interval
         momentumInterval = setInterval(function() {
             ticksSince++;
 
