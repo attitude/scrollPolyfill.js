@@ -1,73 +1,100 @@
 /*! touchScroll.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
 window.addEventListener('load', function() {
-    var startPageY    = document.body.scrollTop,
-        distances     = [0,0,0,0],
+    var startPageY,
+        momentumInterval,
+        momentumAcceleration,
 
-        scrollToStart = document.body.scrollTop,
-        scrollToValue = document.body.scrollTop,
-        scrollToInterval,
+        scrollToStart = scrollToValue = momentumToValue = previousScrollToValue = document.body.scrollTop,
         scrollToTriggered  = false,
-        scrollToPixelRatio = (window.devicescrollToPixelRatio || 1),
         scrollToActive     = false,
-        doMomentumScroll = function () {
-            // Average of (average and last distance) to put weight on last distance
-            scrollToValue = document.body.scrollTop + parseInt((
-                ((distances[1] + distances[2] + distances[3]) / 3 - distances[0])
-                +
-                distances[3]-distances[0]
-            ) / 2);
-        }
+
+        // More means longer ease out, default: 2
+        coefDelta      = 6,
+        momentumTicks  = 50,
+
+        ticksPerSecond = 50,
+        ticksSince     = 0,
+        ticksPerMove   = 0
         ;
 
     document.body.addEventListener('touchstart', function(e) {
-        scrollToStart  = scrollToValue = document.body.scrollTop;
+        scrollToStart  = scrollToValue = momentumToValue = previousScrollToValue = document.body.scrollTop;
         scrollToActive = true;
         startPageY     = e.pageY;
-        distances      = [0,0,0,0];
 
-        // Begin simulated scrolling just by observing value to which we need to
-        // scroll to
-        scrollToInterval = setInterval(function() {
-            // When we reached the final value...
-            if (document.body.scrollTop===scrollToValue) {
+        momentumInterval = setInterval(function() {
+            ticksSince++;
+
+            if(scrollToActive) {
+                return;
+            }
+
+            if (ticksSince > momentumTicks) {
                 // ...and touchend or touchcancel or scroll was triggered,
                 // we can safely disable loop
                 if (!scrollToActive) {
                     // Self-deactivete
-                    clearInterval(scrollToInterval);
+                    clearInterval(momentumInterval);
                 }
 
                 return;
             }
 
-            // Force non-zero value
-            if (scrollToValue < 0) {
-                scrollToValue = 0;
+            momentumAcceleration = (scrollToValue - previousScrollToValue) / (ticksPerMove + 1);
+
+            // Treshhold for slow momentums
+            if (Math.abs(momentumAcceleration) < 0.5 * (100 / ticksPerSecond)) {
+                // Self-deactivate
+                ticksSince = momentumTicks;
+                return;
             }
 
-            // Before changing the document.body.scrollTop we need to tell
-            // future scroll event, that it was triggered artificially.
+            momentumAcceleration-= momentumAcceleration * Math.pow(coefDelta, 10 * (ticksSince/momentumTicks - 1));
+
+            // Help with rounding; fixes juming feel
+            if (momentumAcceleration < 0) {
+                momentumAcceleration-= 0.5;
+            } else {
+                momentumAcceleration+= 0.5;
+            }
+
+            momentumToValue += momentumAcceleration;
+
+            // Top edge boundary
+            if (momentumToValue < 0) {
+                // Self-deactivate
+                ticksSince = momentumTicks;
+                return;
+            }
+
+            // Skip same values for performance
+            if (document.body.scrollTop===parseInt(momentumToValue)) {
+                return;
+            }
+
+            // Not a native scroll
             scrollToTriggered = true;
 
-            // Scroll directions calculation
-            if (scrollToValue > document.body.scrollTop) {
-                document.body.scrollTop += parseInt((scrollToValue - document.body.scrollTop) / 4) + 1;
-            } else {
-                document.body.scrollTop -= parseInt((document.body.scrollTop - scrollToValue) / 4) + 1;
+            document.body.scrollTop = parseInt(momentumToValue);
+            // console.log(scrollToActive, 'momentum:', parseInt(momentumToValue));
+
+            // Bottom edge boundary
+            if (document.body.scrollTop != parseInt(momentumToValue)) {
+                // Self-deactivate
+                ticksSince = momentumTicks;
+                return;
             }
-        }, 50);
+        }, 1000 / ticksPerSecond);
     }, false);
 
     document.body.addEventListener('touchend', function(e) {
         // We're done with moving
         scrollToActive = false;
-        doMomentumScroll();
     }, false);
 
     document.body.addEventListener('touchcancel', function(e) {
         // We're done with moving
         scrollToActive = false;
-        doMomentumScroll();
     }, false);
 
     // Touch move triggers simulated scroll
@@ -75,14 +102,39 @@ window.addEventListener('load', function() {
         // Prevents default scroll action
         e.preventDefault();
 
-        // Sets value to where to scroll
-        scrollToValue = startPageY - e.pageY + document.body.scrollTop;
+        // Remember from previous position to calculate momentum
+        previousScrollToValue = scrollToValue;
 
-        // Set buffer of last distances for later to calculate momentum scroll
-        distances[0] = distances[1];
-        distances[1] = distances[2];
-        distances[2] = distances[3];
-        distances[3] = (startPageY - e.pageY) * scrollToPixelRatio;
+        // Remember ticks between last move to calculate momentum
+        ticksPerMove = ticksSince;
+
+        // Calculate where we need to scroll to
+        scrollToValue = momentumToValue = startPageY - e.pageY + document.body.scrollTop;
+
+        // Top boundary
+        if (scrollToValue < 0) {
+            if (scrollToStart >= 0) {
+                scrollToStart += scrollToValue;
+                startPageY     = e.pageY;
+            }
+
+            if (scrollToStart < 0) { scrollToStart = 0; }
+
+            scrollToValue = previousScrollToValue = momentumToValue = startPageY - e.pageY + document.body.scrollTop;
+        }
+
+        // Not a native scroll
+        scrollToTriggered = true;
+        document.body.scrollTop = scrollToValue;
+
+        // Bottom boundary (failed to scroll)
+        if (scrollToValue > document.body.scrollTop) {
+            startPageY = e.pageY;
+            scrollToStart += document.body.scrollTop - scrollToValue;
+            scrollToValue = momentumToValue = document.body.scrollTop;
+        }
+
+        ticksSince = 0;
     }, false);
 
     window.addEventListener('scroll', function(e) {
@@ -91,8 +143,6 @@ window.addEventListener('load', function() {
         if (! scrollToTriggered) {
             // Trigger self deactivation of interval
             scrollToActive = false;
-            // Use navice scrolled top value to replace queue
-            scrollToValue = document.body.scrollTop;
         }
 
         scrollToTriggered = false;
