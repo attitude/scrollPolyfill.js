@@ -1,8 +1,6 @@
+/*! touchScroll.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
 window.addEventListener('load', function() {
-    var // Scroll Top where touch starts
-        startClientY,
-
-        // Momentum animation interval value
+    var // Momentum animation interval value
         momentumInterval,
         // Momentum acceleration
         momentumAcceleration,
@@ -59,18 +57,16 @@ window.addEventListener('load', function() {
 
         targetsYLength = targetsY.length;
 
-        // Scroll Top where touch starts
-        startClientY = e.touches[0].clientY;
-
         for (i=0; i<targetsYLength; i++) {
-            // Scroll top when move started
-            targetsY[i].scrollToStart =
-                // Scroll top where to go to
-                targetsY[i].scrollToValue =
-                // Scroll top where momentum scroll to go to
-                targetsY[i].momentumToValue =
-                // Scroll top where previous move went to
-                targetsY[i].scrollToValue =
+            // Scroll Top where touch starts
+            targetsY[i].startClientY = e.touches[0].clientY;
+
+            // Scroll top where to go to
+            targetsY[i].scrollToValue =
+            // Scroll top where momentum scroll to go to
+            targetsY[i].momentumToValue =
+            // Scroll top where previous move went to
+            targetsY[i].previousScrollToValue =
                 // Default is current position
                 targetsY[i].scrollTop
             ;
@@ -94,25 +90,29 @@ window.addEventListener('load', function() {
                 if (!scrollToActive) {
                     // Self-deactivete
                     clearInterval(momentumInterval);
+                    momentumInterval = null;
                 }
 
                 return;
             }
 
-            activeScrollIndex = 0;
+            activeScrollIndex = momentumAcceleration = 0;
+
+            // Calcuate sum of all moves divided by number of ticks between last move
+            for (i=0; i<targetsYLength;i++) {
+                momentumAcceleration += (targetsY[i].scrollToValue - targetsY[i].previousScrollToValue) / (ticksPerMove + 1);
+            }
+
+            // Treshhold for slow momentums
+            if (Math.abs(momentumAcceleration) < 0.5 / (100 / ticksPerSecond)) {
+                // Self-deactivate
+                ticksSince = momentumTicks;
+                return;
+            }
 
             for (i=0; i<targetsYLength;i++) {
                 if (activeScrollIndex != i) {
                     continue;
-                }
-
-                momentumAcceleration = (targetsY[i].scrollToValue - targetsY[i].previousScrollToValue) / (ticksPerMove + 1);
-
-                // Treshhold for slow momentums
-                if (Math.abs(momentumAcceleration) < 0.5 * (100 / ticksPerSecond)) {
-                    // Self-deactivate
-                    ticksSince = momentumTicks;
-                    return;
                 }
 
                 // Quadratic easing out
@@ -186,43 +186,24 @@ window.addEventListener('load', function() {
                 continue;
             }
 
-            // Remember from previous position to calculate momentum
-            targetsY[i].previousScrollToValue = targetsY[i].scrollToValue;
+            // Remember from previous (current) position to calculate momentum
+            targetsY[i].previousScrollToValue = targetsY[i].scrollTop;
 
             // Calculate where we need to scroll to
-            targetsY[i].scrollToValue = targetsY[i].momentumToValue = startClientY - e.touches[0].clientY + targetsY[i].scrollToStart;
-
-            // Top boundary
-            if (targetsY[i].scrollToValue < 0) {
-                if (targetsY[i].nodeName==='BODY') {
-                    if (targetsY[i].scrollToStart >= 0) {
-                        targetsY[i].scrollToStart += targetsY[i].scrollToValue;
-                        startClientY     = e.touches[0].clientY;
-                    }
-
-                    if (targetsY[i].scrollToStart < 0) { targetsY[i].scrollToStart = 0; }
-
-                    // Calculate where we need to scroll to
-                    targetsY[i].previousScrollToValue = targetsY[i].scrollToValue = targetsY[i].momentumToValue = startClientY - e.touches[0].clientY + targetsY[i].scrollTop;
-                }
-
-                activeScrollIndex++; // Force to allow next target
-            }
+            targetsY[i].scrollToValue = targetsY[i].momentumToValue = targetsY[i].startClientY - e.touches[0].clientY + targetsY[i].scrollTop;
 
             // Apply scroll
             targetsY[i].scrollTop = targetsY[i].scrollToValue;
 
-            // Bottom boundary (failed to scroll)
-            if (targetsY[i].scrollToValue > targetsY[i].scrollTop) {
-                if (targetsY[i].nodeName==='BODY') {
-                    startClientY-= targetsY[i].scrollToValue - targetsY[i].scrollTop;
-                    targetsY[i].scrollToValue = targetsY[i].momentumToValue = targetsY[i].scrollTop;
-                }
+            // Apply new relative start for next calculation
+            targetsY[i].startClientY = e.touches[0].clientY;
 
-                activeScrollIndex++; // Force to allow next target
+            // Failed to apply on boundaries
+            if (targetsY[i].scrollToValue !== targetsY[i].scrollTop) {
+                activeScrollIndex++;
             }
 
-            // console.log('#'+i, 'Touch Y:', startClientY, '>', e.touches[0].clientY, 'scrollToStart:', targetsY[i].scrollToStart, 'scrollToValue:', targetsY[i].scrollToValue, '@', targetsY[i].scrollTop);
+            // console.log('#'+i, 'Touch Y:', targetsY[i].startClientY, '>', e.touches[0].clientY, 'scrollToValue:', targetsY[i].scrollToValue, '@', targetsY[i].scrollTop);
         }
 
         ticksSince = 0;
