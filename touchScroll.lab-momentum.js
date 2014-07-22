@@ -28,7 +28,11 @@ window.addEventListener('load', function() {
 
         // Scroll targets
         targetsY = [],
-        targetsYLength = 0
+        targetsYLength = 0,
+
+        // Scroll boundaries
+        boundaryTop = 50,
+        boundaryBottom = 50
         ;
 
     document.body.addEventListener('touchstart', function(e) {
@@ -42,16 +46,23 @@ window.addEventListener('load', function() {
 
         while(target.parentNode != null) {
             target = target.parentNode;
-            if (target.nodeName == 'HTML') {
+
+            // Skip nodes we don't need...
+            if (target.nodeName === 'HTML' || target.nodeName === '#document') {
                 continue;
             }
 
-            styles = getComputedStyle(target);
+            // ...but, let's asume things go wrong
+            try {
+                styles = getComputedStyle(target);
 
-            if (styles != null) {
-                if (styles.overflow != 'hidden' && styles.overflowY !== 'hidden') {
-                    targetsY.push(target);
+                if (styles != null) {
+                    if (styles.overflow != 'hidden' && styles.overflowY !== 'hidden') {
+                        targetsY.push(target);
+                    }
                 }
+            } catch(exception) {
+                console.log(target);
             }
         }
 
@@ -190,7 +201,10 @@ window.addEventListener('load', function() {
             targetsY[i].previousScrollToValue = targetsY[i].scrollTop;
 
             // Calculate where we need to scroll to
-            targetsY[i].scrollToValue = targetsY[i].momentumToValue = targetsY[i].startClientY - e.touches[0].clientY + targetsY[i].scrollTop;
+            targetsY[i].scrollToValue   =
+            targetsY[i].momentumToValue =
+                targetsY[i].startClientY - e.touches[0].clientY + targetsY[i].scrollTop
+            ;
 
             // Apply scroll
             targetsY[i].scrollTop = targetsY[i].scrollToValue;
