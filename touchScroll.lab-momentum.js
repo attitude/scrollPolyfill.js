@@ -1,6 +1,9 @@
 /*! touchScroll.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
 window.addEventListener('load', function() {
-    var // Momentum animation interval value
+    var // Scroll Top where touch starts
+        startClientY,
+
+        // Momentum animation interval value
         momentumInterval,
         // Momentum acceleration
         momentumAcceleration,
@@ -68,10 +71,9 @@ window.addEventListener('load', function() {
 
         targetsYLength = targetsY.length;
 
-        for (i=0; i<targetsYLength; i++) {
-            // Scroll Top where touch starts
-            targetsY[i].startClientY = e.touches[0].clientY;
+        startClientY = e.touches[0].clientY;
 
+        for (i=0; i<targetsYLength; i++) {
             // Scroll top where to go to
             targetsY[i].scrollToValue =
             // Scroll top where momentum scroll to go to
@@ -203,22 +205,24 @@ window.addEventListener('load', function() {
             // Calculate where we need to scroll to
             targetsY[i].scrollToValue   =
             targetsY[i].momentumToValue =
-                targetsY[i].startClientY - e.touches[0].clientY + targetsY[i].scrollTop
+                startClientY - e.touches[0].clientY + targetsY[i].scrollTop
             ;
+
+            // console.log('#'+i, 'Touch Y:', startClientY, '>', e.touches[0].clientY, 'scrollToValue:', targetsY[i].scrollToValue, '@', targetsY[i].scrollTop);
 
             // Apply scroll
             targetsY[i].scrollTop = targetsY[i].scrollToValue;
 
-            // Apply new relative start for next calculation
-            targetsY[i].startClientY = e.touches[0].clientY;
+            // console.log('now @', targetsY[i].scrollTop);
 
             // Failed to apply on boundaries
             if (targetsY[i].scrollToValue !== targetsY[i].scrollTop) {
                 activeScrollIndex++;
             }
-
-            // console.log('#'+i, 'Touch Y:', targetsY[i].startClientY, '>', e.touches[0].clientY, 'scrollToValue:', targetsY[i].scrollToValue, '@', targetsY[i].scrollTop);
         }
+
+        // Apply new relative start for next calculation
+        startClientY = e.touches[0].clientY;
 
         ticksSince = 0;
     }, false);
