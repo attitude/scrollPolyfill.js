@@ -11,27 +11,27 @@ event.originalEvent.wheelDelta
 */
     var debug = false,
         consoleInfo = function () {
-            if (debug === 'info' || debug <= 1) {
+            if (!debug && (debug === 'info' || debug <= 1)) {
                 console.info(arguments);
             }
         },
         consoleLog = function () {
-            if (debug === 'log' || debug <= 1) {
+            if (!debug && (debug === 'log' || debug <= 2)) {
                 console.log(arguments);
             }
         },
         consoleWarn = function () {
-            if (debug === 'warn' || debug <= 1) {
+            if (!debug && (debug === 'warn' || debug <= 3)) {
                 console.warn(arguments);
             }
         },
         consoleError = function () {
-            if (debug === 'error' || debug <= 1) {
+            if (!debug && (debug === 'error' || debug <= 4)) {
                 console.error(arguments);
             }
         },
         consoleDebug = function () {
-            if (debug === 'debug' || debug <= 1) {
+            if (!debug && (debug === 'debug' || debug <= 5)) {
                 console.debug(arguments);
             }
         },
