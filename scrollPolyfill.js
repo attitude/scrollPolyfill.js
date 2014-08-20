@@ -1,4 +1,4 @@
-/*! touchScroll.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
+/*! scrollPolyfill.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
 /*jslint browser: true*/
 (function(window) {
 /*
