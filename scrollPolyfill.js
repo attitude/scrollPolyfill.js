@@ -285,9 +285,9 @@ event.originalEvent.wheelDelta
         var scrollTopValue;
         
         // Already on top, willing to display bar?
-        if (body.scrollTop === 0 && startClientY - e.touches[0].clientY < 0) {
+        if (document.body.clientHeight !== document.body.offsetHeight && body.scrollTop === 0 && startClientY - e.touches[0].clientY < 0) {
             scrollToActive = false;
-            
+
             return;
         }
 
