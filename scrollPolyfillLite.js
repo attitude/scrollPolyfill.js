@@ -86,7 +86,7 @@
         },
 
         triggerScroll = function triggerScroll() {
-            if (isAndroidBrowser) {
+            if (window.requestAnimationFrame) {
                 window.requestAnimationFrame(_triggerScroll);
             } else {
                 _triggerScroll();
