@@ -1,41 +1,42 @@
 /*! scrollPolyfillLite.js: Scroll Polyfil for Touch Devides | Copyright (c) 2014 Martin Adamko; Licensed MIT */
 /*jslint browser: true*/
-(function(window, console) {
+(function (window, console) {
+    'use strict';
     var debug = false,
-        consoleClear = function() {
+        consoleClear = function () {
             if (debug) {
                 console.clear();
             }
         },
-        consoleInfo = function() {
+        consoleInfo = function () {
             if (!debug && (debug <= 1 || debug === 'info')) {
                 return;
             }
 
             console.info(arguments);
         },
-        consoleLog = function() {
+        consoleLog = function () {
             if (!debug && (debug <= 2 || debug === 'info')) {
                 return;
             }
 
             console.log(arguments);
         },
-        consoleWarn = function() {
+        consoleWarn = function () {
             if (!debug && (debug <= 3 || debug === 'info')) {
                 return;
             }
 
             console.warn(arguments);
         },
-        consoleError = function() {
+        consoleError = function () {
             if (!debug && (debug <= 4 || debug === 'info')) {
                 return;
             }
 
             console.error(arguments);
         },
-        consoleDebug = function() {
+        consoleDebug = function () {
             if (!debug && (debug <= 5 || debug === 'info')) {
                 return;
             }
@@ -93,8 +94,8 @@
             }
         },
 
-        lastPositions = function() {
-            for (i = 0; i < scrollTargetsLength; i++) {
+        lastPositions = function () {
+            for (i = 0; i < scrollTargetsLength; i = i + 1) {
                 consoleWarn('Update #', i, scrollTargets[i].scrollTop, scrollTargets[i].scrollLeft);
 
                 scrollTargets[i].scrollTopLast = scrollTargets[i].scrollTop;
@@ -102,16 +103,16 @@
             }
         };
 
-    scrollInterval = setInterval(function() {
+    scrollInterval = setInterval(function () {
         var did = false;
 
-        ticksSince++;
+        ticksSince = ticksSince + 1;
 
         if (!scrollToActive) {
             return;
         }
 
-        for (i = 0; i < scrollTargetsLength; i++) {
+        for (i = 0; i < scrollTargetsLength; i = i + 1) {
             // Already found some
             if (did) {
                 break;
@@ -134,7 +135,7 @@
         }
     }, ticksTTL);
 
-    document.body.addEventListener('touchstart', function(e) {
+    document.body.addEventListener('touchstart', function (e) {
         var styles;
 
         consoleClear();
@@ -194,7 +195,7 @@
         lastPositions();
     });
 
-    document.body.addEventListener('touchmove', function(e) {
+    document.body.addEventListener('touchmove', function (e) {
         // e.preventDefault();
         triggerScroll();
 
@@ -231,7 +232,7 @@
         ticksSince = 0;
     });
 
-    document.body.addEventListener('touchend', function(e) {
+    document.body.addEventListener('touchend', function (e) {
         var top = document.body.scrollTop,
             left = document.body.scrollLeft;
         // e.preventDefault();
@@ -252,7 +253,7 @@
         scrollEventFired = true;
     });
 
-    document.body.addEventListener('touchcancel', function(e) {
+    document.body.addEventListener('touchcancel', function (e) {
         // e.preventDefault();
 
         // Not yet... cancels any scrolling
@@ -270,7 +271,7 @@
         triggerScroll();
     }, false);
 
-    window.addEventListener('scroll', function(e) {
+    window.addEventListener('scroll', function (e) {
         // Allow next scroll
         scrollEventFired = true;
 
